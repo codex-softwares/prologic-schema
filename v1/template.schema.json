@@ -1,0 +1,1202 @@
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "title" : "Template",
+  "type" : "object",
+  "additionalProperties" : false,
+  "properties" : {
+    "name" : {
+      "type" : "string"
+    },
+    "details" : {
+      "type" : "string"
+    },
+    "inputs" : {
+      "type" : "array",
+      "items" : {
+        "oneOf" : [ {
+          "$ref" : "#/definitions/ChoiceQuestion"
+        }, {
+          "$ref" : "#/definitions/ContextSelector"
+        }, {
+          "$ref" : "#/definitions/NumericQuestion"
+        }, {
+          "$ref" : "#/definitions/DataCapture"
+        }, {
+          "$ref" : "#/definitions/Action"
+        }, {
+          "$ref" : "#/definitions/TextQuestion"
+        }, {
+          "$ref" : "#/definitions/YesNoQuestion"
+        } ]
+      }
+    },
+    "vars" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "oneOf" : [ {
+          "$ref" : "#/definitions/Fact"
+        }, {
+          "$ref" : "#/definitions/Counter"
+        }, {
+          "$ref" : "#/definitions/SimplifiedFact"
+        } ]
+      },
+      "propertyNames" : {
+        "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+      }
+    },
+    "tests" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/definitions/Test"
+      }
+    },
+    "$schema" : {
+      "type" : "string"
+    }
+  },
+  "required" : [ "name" ],
+  "definitions" : {
+    "ChoiceQuestion" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "type" : {
+          "type" : "string",
+          "enum" : [ "MULTIPLE_CHOICES" ],
+          "default" : "MULTIPLE_CHOICES"
+        },
+        "id" : {
+          "type" : "string",
+          "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+        },
+        "title" : {
+          "type" : "string",
+          "description" : "The main displayed text"
+        },
+        "details" : {
+          "type" : "string",
+          "description" : "A markdown description to show before the options"
+        },
+        "style" : {
+          "type" : "string",
+          "enum" : [ "Emergency", "Informative", "Default" ],
+          "description" : "Help taking attention using different styles"
+        },
+        "minAnswers" : {
+          "type" : "integer"
+        },
+        "maxAnswers" : {
+          "type" : "integer"
+        },
+        "activateIf" : {
+          "oneOf" : [ {
+            "$ref" : "#/definitions/And"
+          }, {
+            "$ref" : "#/definitions/InputStateCondition"
+          }, {
+            "$ref" : "#/definitions/Not"
+          }, {
+            "$ref" : "#/definitions/NumericValueCondition"
+          }, {
+            "$ref" : "#/definitions/Or"
+          }, {
+            "$ref" : "#/definitions/AllFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactStateCondition"
+          } ],
+          "description" : "Condition to be displayed"
+        },
+        "options" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/RegularOption"
+          }
+        },
+        "rules" : {
+          "type" : "array",
+          "items" : {
+            "oneOf" : [ {
+              "$ref" : "#/definitions/AnswerRule"
+            }, {
+              "$ref" : "#/definitions/StateRule"
+            } ]
+          }
+        },
+        "required" : {
+          "type" : "boolean",
+          "description" : "If true, then the completion of this input is used as a condition for enabling other input which require validation"
+        }
+      },
+      "title" : "MULTIPLE_CHOICES",
+      "required" : [ "type", "id" ]
+    },
+    "And" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "and" : {
+          "type" : "array",
+          "items" : {
+            "oneOf" : [ {
+              "$ref" : "#/definitions/And"
+            }, {
+              "$ref" : "#/definitions/InputStateCondition"
+            }, {
+              "$ref" : "#/definitions/Not"
+            }, {
+              "$ref" : "#/definitions/NumericValueCondition"
+            }, {
+              "$ref" : "#/definitions/Or"
+            }, {
+              "$ref" : "#/definitions/AllFactCondition"
+            }, {
+              "$ref" : "#/definitions/AnyFactCondition"
+            }, {
+              "$ref" : "#/definitions/AnyFactStateCondition"
+            } ]
+          }
+        }
+      },
+      "title" : ".And"
+    },
+    "InputStateCondition" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "inputs" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string",
+            "pattern" : "^([a-zA-Z0-9][a-zA-Z0-9_\\-]*/)*[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        },
+        "are" : {
+          "type" : "string",
+          "enum" : [ "Answered", "Complete", "Valid" ]
+        }
+      },
+      "title" : ".InputStateCondition",
+      "required" : [ "inputs", "are" ]
+    },
+    "Not" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "not" : {
+          "oneOf" : [ {
+            "$ref" : "#/definitions/And"
+          }, {
+            "$ref" : "#/definitions/InputStateCondition"
+          }, {
+            "$ref" : "#/definitions/Not"
+          }, {
+            "$ref" : "#/definitions/NumericValueCondition"
+          }, {
+            "$ref" : "#/definitions/Or"
+          }, {
+            "$ref" : "#/definitions/AllFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactStateCondition"
+          } ]
+        }
+      },
+      "title" : ".Not",
+      "required" : [ "not" ]
+    },
+    "NumericValueCondition" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        ">" : {
+          "type" : "number"
+        },
+        ">=" : {
+          "type" : "number"
+        },
+        "<" : {
+          "type" : "number"
+        },
+        "<=" : {
+          "type" : "number"
+        },
+        "valueOf" : {
+          "type" : "string",
+          "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*(?:\\.[a-zA-Z0-9][a-zA-Z0-9_\\-]*)?$"
+        }
+      },
+      "title" : ".NumericValueCondition",
+      "required" : [ "valueOf" ]
+    },
+    "Or" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "or" : {
+          "type" : "array",
+          "items" : {
+            "oneOf" : [ {
+              "$ref" : "#/definitions/And"
+            }, {
+              "$ref" : "#/definitions/InputStateCondition"
+            }, {
+              "$ref" : "#/definitions/Not"
+            }, {
+              "$ref" : "#/definitions/NumericValueCondition"
+            }, {
+              "$ref" : "#/definitions/Or"
+            }, {
+              "$ref" : "#/definitions/AllFactCondition"
+            }, {
+              "$ref" : "#/definitions/AnyFactCondition"
+            }, {
+              "$ref" : "#/definitions/AnyFactStateCondition"
+            } ]
+          }
+        }
+      },
+      "title" : ".Or"
+    },
+    "AllFactCondition" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "all" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "boolean"
+          },
+          "propertyNames" : {
+            "pattern" : "^(([a-zA-Z0-9][a-zA-Z0-9_\\-]*/)*[a-zA-Z0-9][a-zA-Z0-9_\\-]*\\.(isActive|isLocked|isValid)|\\$\\.validationIssues|[a-zA-Z0-9][a-zA-Z0-9_\\-]*)$"
+          }
+        }
+      },
+      "title" : ".AllFactCondition",
+      "required" : [ "all" ]
+    },
+    "AnyFactCondition" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "any" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "boolean"
+          },
+          "propertyNames" : {
+            "pattern" : "^(([a-zA-Z0-9][a-zA-Z0-9_\\-]*/)*[a-zA-Z0-9][a-zA-Z0-9_\\-]*\\.(isActive|isLocked|isValid)|\\$\\.validationIssues|[a-zA-Z0-9][a-zA-Z0-9_\\-]*)$"
+          }
+        }
+      },
+      "title" : ".AnyFactCondition",
+      "required" : [ "any" ]
+    },
+    "AnyFactStateCondition" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "allOf" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string",
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        },
+        "are" : {
+          "type" : "string",
+          "enum" : [ "Defined", "Undefined" ]
+        }
+      },
+      "title" : ".AnyFactStateCondition",
+      "required" : [ "allOf", "are" ]
+    },
+    "RegularOption" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "id" : {
+          "type" : "string",
+          "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+        },
+        "title" : {
+          "type" : "string",
+          "description" : "The main displayed text"
+        },
+        "details" : {
+          "type" : "string"
+        },
+        "set" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "boolean"
+          },
+          "description" : "Target state of declared facts identified by their names",
+          "propertyNames" : {
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        },
+        "add" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "number"
+          },
+          "description" : "Number to add to numeric variables identified by their names",
+          "propertyNames" : {
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        }
+      }
+    },
+    "AnswerRule" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "ifAnswers" : {
+          "$ref" : "#/definitions/AnswerContains"
+        },
+        "then" : {
+          "$ref" : "#/definitions/Effect"
+        }
+      },
+      "title" : ".ChoiceQuestion$AnswerRule",
+      "required" : [ "ifAnswers", "then" ]
+    },
+    "AnswerContains" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "contains" : {
+          "type" : "integer"
+        },
+        "to" : {
+          "type" : "integer"
+        },
+        "of" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        }
+      },
+      "required" : [ "contains", "of" ]
+    },
+    "Effect" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "set" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "boolean"
+          },
+          "description" : "Target state of declared facts identified by their names",
+          "propertyNames" : {
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        },
+        "add" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "number"
+          },
+          "description" : "Number to add to numeric variables identified by their names",
+          "propertyNames" : {
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        }
+      }
+    },
+    "StateRule" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "ifStateIs" : {
+          "type" : "string",
+          "enum" : [ "Answered", "Complete", "Valid" ]
+        },
+        "then" : {
+          "$ref" : "#/definitions/Effect"
+        }
+      },
+      "title" : ".ChoiceQuestion$StateRule",
+      "required" : [ "ifStateIs", "then" ]
+    },
+    "ContextSelector" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "type" : {
+          "type" : "string",
+          "enum" : [ "CONTEXT_SELECTOR" ],
+          "default" : "CONTEXT_SELECTOR"
+        },
+        "universe" : {
+          "type" : "string",
+          "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+        },
+        "title" : {
+          "type" : "string",
+          "description" : "The main displayed text"
+        },
+        "details" : {
+          "type" : "string"
+        },
+        "required" : {
+          "type" : "boolean",
+          "description" : "If true, then the completion of this input is used as a condition for enabling other input which require validation"
+        }
+      },
+      "title" : "CONTEXT_SELECTOR",
+      "required" : [ "type", "universe" ]
+    },
+    "NumericQuestion" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "type" : {
+          "type" : "string",
+          "enum" : [ "NUMERIC_OPTIONS" ],
+          "default" : "NUMERIC_OPTIONS"
+        },
+        "id" : {
+          "type" : "string",
+          "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+        },
+        "title" : {
+          "type" : "string"
+        },
+        "details" : {
+          "type" : "string",
+          "description" : "A markdown description to show before the options"
+        },
+        "style" : {
+          "type" : "string",
+          "enum" : [ "Emergency", "Informative", "Default" ]
+        },
+        "activateIf" : {
+          "oneOf" : [ {
+            "$ref" : "#/definitions/And"
+          }, {
+            "$ref" : "#/definitions/InputStateCondition"
+          }, {
+            "$ref" : "#/definitions/Not"
+          }, {
+            "$ref" : "#/definitions/NumericValueCondition"
+          }, {
+            "$ref" : "#/definitions/Or"
+          }, {
+            "$ref" : "#/definitions/AllFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactStateCondition"
+          } ]
+        },
+        "mappedOn" : {
+          "type" : "string",
+          "description" : "Automatically set answers based on this numeric source (variable or input)",
+          "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*(?:\\.[a-zA-Z0-9][a-zA-Z0-9_\\-]*)?$"
+        },
+        "options" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/NumericOption"
+          }
+        },
+        "required" : {
+          "type" : "boolean"
+        }
+      },
+      "title" : "NUMERIC_OPTIONS",
+      "required" : [ "type", "id" ]
+    },
+    "NumericOption" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "id" : {
+          "type" : "string",
+          "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+        },
+        "title" : {
+          "type" : "string"
+        },
+        "details" : {
+          "type" : "string",
+          "description" : "A markdown description"
+        },
+        "when" : {
+          "$ref" : "#/definitions/NumValueCriteria"
+        },
+        "set" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "boolean"
+          },
+          "description" : "Target state of declared facts identified by their names",
+          "propertyNames" : {
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        },
+        "add" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "number"
+          },
+          "description" : "Number to add to numeric variables identified by their names",
+          "propertyNames" : {
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        }
+      },
+      "required" : [ "when" ]
+    },
+    "NumValueCriteria" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        ">" : {
+          "type" : "number"
+        },
+        ">=" : {
+          "type" : "number"
+        },
+        "<" : {
+          "type" : "number"
+        },
+        "<=" : {
+          "type" : "number"
+        },
+        "=" : {
+          "type" : "number"
+        }
+      }
+    },
+    "DataCapture" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "description" : "An multi-input enabling the declaration of the mapping of data sources",
+      "properties" : {
+        "type" : {
+          "type" : "string",
+          "enum" : [ "DATA" ],
+          "default" : "DATA"
+        },
+        "id" : {
+          "type" : "string",
+          "description" : "A unique identifier",
+          "pattern" : "^([a-zA-Z0-9][a-zA-Z0-9_\\-]*/)*[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+        },
+        "universe" : {
+          "type" : "string",
+          "description" : "The name of the data universe the declared data sources refer to",
+          "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+        },
+        "title" : {
+          "type" : "string",
+          "description" : "The main displayed text"
+        },
+        "details" : {
+          "type" : "string",
+          "description" : "Some text to give more details, markdown accepted"
+        },
+        "context" : {
+          "oneOf" : [ {
+            "$ref" : "#/definitions/AmongContext"
+          }, {
+            "$ref" : "#/definitions/ForEachContext"
+          } ],
+          "description" : "Defines how the input will be mapped onto contexts, either by enabling the user to choose among the listed contexts of by instantiating a mapped input for each of them"
+        },
+        "sources" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "oneOf" : [ {
+              "$ref" : "#/definitions/SingleProbe"
+            }, {
+              "$ref" : "#/definitions/Count"
+            } ]
+          },
+          "description" : "A map of data sources",
+          "propertyNames" : {
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        }
+      },
+      "title" : "DATA",
+      "required" : [ "type", "universe", "sources" ]
+    },
+    "AmongContext" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "among" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string",
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          },
+          "description" : "A set of context ids among which one single will be selected for a given situation. See data sources documentation"
+        }
+      },
+      "title" : ".DataCapture$AmongContext",
+      "required" : [ "among" ]
+    },
+    "ForEachContext" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "foreach" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string",
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        }
+      },
+      "title" : ".DataCapture$ForEachContext",
+      "required" : [ "foreach" ]
+    },
+    "SingleProbe" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "description" : "A data source mapping one single probe",
+      "properties" : {
+        "probe" : {
+          "type" : "string",
+          "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+        },
+        "title" : {
+          "type" : "string",
+          "description" : "The main displayed text"
+        },
+        "details" : {
+          "type" : "string",
+          "description" : "Some text to give more details, markdown accepted"
+        },
+        "effects" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/ProbeEffect"
+          },
+          "description" : "A set of effects conditioned by the probed value"
+        }
+      },
+      "title" : ".DataCapture$SingleProbe",
+      "required" : [ "probe" ]
+    },
+    "ProbeEffect" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "description" : "A conditional effect based on a data source value",
+      "properties" : {
+        "title" : {
+          "type" : "string",
+          "description" : "The main displayed text"
+        },
+        "details" : {
+          "type" : "string",
+          "description" : "Some text to give more details, markdown accepted"
+        },
+        "when" : {
+          "$ref" : "#/definitions/NumValueCriteria",
+          "description" : "The definition of when the effect applies"
+        },
+        "set" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "boolean"
+          },
+          "description" : "A map of target values for facts identified by their names.See how multiple effects on the same fact are handled",
+          "propertyNames" : {
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        },
+        "add" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "number"
+          },
+          "description" : "A map of numbers to add to numeric variables identified by their names",
+          "propertyNames" : {
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        }
+      },
+      "required" : [ "when" ]
+    },
+    "Count" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "countWhose" : {
+          "type" : "array",
+          "items" : {
+            "oneOf" : [ {
+              "$ref" : "#/definitions/HasTags"
+            }, {
+              "$ref" : "#/definitions/ValueIs"
+            } ]
+          },
+          "description" : "A set of criteria to define the probes that will be counted. Criteria are either applying on the probed values or on the probe themselves"
+        },
+        "amongThose" : {
+          "type" : "array",
+          "items" : {
+            "oneOf" : [ {
+              "$ref" : "#/definitions/HasTags"
+            }, {
+              "$ref" : "#/definitions/ValueIs"
+            } ]
+          },
+          "description" : "A set of criteria to define the probes comparison set. Criteria are either applying on the probed values or on the probe themselves"
+        },
+        "title" : {
+          "type" : "string",
+          "description" : "The main displayed text"
+        },
+        "details" : {
+          "type" : "string"
+        },
+        "effects" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/ProbeEffect"
+          }
+        }
+      },
+      "title" : ".DataCapture$Count",
+      "required" : [ "countWhose" ]
+    },
+    "HasTags" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "tagged" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          },
+          "description" : "A set of tags the probes are expected to have to be included in the counting"
+        }
+      },
+      "title" : ".DataCapture$HasTags",
+      "required" : [ "tagged" ]
+    },
+    "ValueIs" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "havingValue" : {
+          "$ref" : "#/definitions/NumValueCriteria",
+          "description" : "A set of numerical conditions expected to be verified on the probed value to be included in the counting"
+        }
+      },
+      "title" : ".DataCapture$ValueIs",
+      "required" : [ "havingValue" ]
+    },
+    "Action" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "type" : {
+          "type" : "string",
+          "enum" : [ "ACTION" ],
+          "default" : "ACTION"
+        },
+        "id" : {
+          "type" : "string",
+          "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+        },
+        "title" : {
+          "type" : "string",
+          "description" : "The main displayed text"
+        },
+        "details" : {
+          "type" : "string"
+        },
+        "style" : {
+          "type" : "string",
+          "enum" : [ "Emergency", "Informative", "Default" ],
+          "description" : "Help taking attention using different styles"
+        },
+        "hook" : {
+          "$ref" : "#/definitions/HookRef"
+        },
+        "freezeOnceComplete" : {
+          "type" : "boolean",
+          "description" : "If true, then the whole questionnaire is frozen as soon as the action have been successfully completed"
+        },
+        "activateIf" : {
+          "oneOf" : [ {
+            "$ref" : "#/definitions/And"
+          }, {
+            "$ref" : "#/definitions/InputStateCondition"
+          }, {
+            "$ref" : "#/definitions/Not"
+          }, {
+            "$ref" : "#/definitions/NumericValueCondition"
+          }, {
+            "$ref" : "#/definitions/Or"
+          }, {
+            "$ref" : "#/definitions/AllFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactStateCondition"
+          } ],
+          "description" : "Condition to displayed"
+        },
+        "validationRequired" : {
+          "type" : "boolean",
+          "description" : "If true, then the whole questionnaire is frozen as soon as the action have been successfully completed"
+        },
+        "required" : {
+          "type" : "boolean",
+          "description" : "If true, then the completion of this input is used as a condition for enabling other input which require validation"
+        }
+      },
+      "title" : "ACTION",
+      "required" : [ "type", "id" ]
+    },
+    "HookRef" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "description" : "The name of the hook, referencing hooks declared in the application"
+        },
+        "args" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "oneOf" : [ {
+              "$ref" : "#/definitions/ConstArg"
+            }, {
+              "$ref" : "#/definitions/ValueRef"
+            } ]
+          },
+          "description" : "A map of arguments to substitute for placeholders. Arguments can be constants or references to variables",
+          "propertyNames" : {
+            "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+          }
+        }
+      },
+      "required" : [ "name" ]
+    },
+    "ConstArg" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "const" : {
+          "type" : "string",
+          "description" : "A simple string to to substitute as it for a placeholder",
+          "pattern" : "^[$\\-_.+!*'()a-zA-Z0-9]+$"
+        }
+      },
+      "title" : ".HookRef$ConstArg",
+      "required" : [ "const" ]
+    },
+    "ValueRef" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "ref" : {
+          "type" : "string",
+          "description" : "The name of a string variable",
+          "pattern" : "([a-zA-Z0-9][a-zA-Z0-9_\\-]*/)*[a-zA-Z0-9][a-zA-Z0-9_\\-]*"
+        }
+      },
+      "title" : ".HookRef$ValueRef",
+      "required" : [ "ref" ]
+    },
+    "TextQuestion" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "type" : {
+          "type" : "string",
+          "enum" : [ "TEXT" ],
+          "default" : "TEXT"
+        },
+        "id" : {
+          "type" : "string",
+          "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+        },
+        "title" : {
+          "type" : "string"
+        },
+        "details" : {
+          "type" : "string"
+        },
+        "maxLength" : {
+          "type" : "integer"
+        },
+        "pattern" : {
+          "$ref" : "#/definitions/Pattern"
+        },
+        "activateIf" : {
+          "oneOf" : [ {
+            "$ref" : "#/definitions/And"
+          }, {
+            "$ref" : "#/definitions/InputStateCondition"
+          }, {
+            "$ref" : "#/definitions/Not"
+          }, {
+            "$ref" : "#/definitions/NumericValueCondition"
+          }, {
+            "$ref" : "#/definitions/Or"
+          }, {
+            "$ref" : "#/definitions/AllFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactStateCondition"
+          } ],
+          "description" : "Condition to be displayed"
+        },
+        "required" : {
+          "type" : "boolean"
+        },
+        "suggestions" : {
+          "$ref" : "#/definitions/SuggestionDef"
+        }
+      },
+      "title" : "TEXT",
+      "required" : [ "type", "id" ]
+    },
+    "Pattern" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "regex" : {
+          "type" : "string"
+        },
+        "description" : {
+          "type" : "string"
+        }
+      }
+    },
+    "SuggestionDef" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "predefined" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "useHistory" : {
+          "type" : "boolean"
+        }
+      },
+      "required" : [ "useHistory" ]
+    },
+    "YesNoQuestion" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "type" : {
+          "type" : "string",
+          "enum" : [ "YES_NO" ],
+          "default" : "YES_NO"
+        },
+        "id" : {
+          "type" : "string",
+          "pattern" : "^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$"
+        },
+        "title" : {
+          "type" : "string"
+        },
+        "details" : {
+          "type" : "string",
+          "description" : "A markdown description to show before the options"
+        },
+        "style" : {
+          "type" : "string",
+          "enum" : [ "Emergency", "Informative", "Default" ],
+          "description" : "Help taking attention using different styles"
+        },
+        "textForYes" : {
+          "type" : "string"
+        },
+        "textForNo" : {
+          "type" : "string"
+        },
+        "activateIf" : {
+          "oneOf" : [ {
+            "$ref" : "#/definitions/And"
+          }, {
+            "$ref" : "#/definitions/InputStateCondition"
+          }, {
+            "$ref" : "#/definitions/Not"
+          }, {
+            "$ref" : "#/definitions/NumericValueCondition"
+          }, {
+            "$ref" : "#/definitions/Or"
+          }, {
+            "$ref" : "#/definitions/AllFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactStateCondition"
+          } ],
+          "description" : "Condition to be displayed"
+        },
+        "required" : {
+          "type" : "boolean"
+        }
+      },
+      "title" : "YES_NO",
+      "required" : [ "type", "id" ]
+    },
+    "Fact" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "default" : {
+          "type" : "string",
+          "enum" : [ "Undefined", "True", "False" ]
+        },
+        "title" : {
+          "type" : "string"
+        },
+        "trueIf" : {
+          "oneOf" : [ {
+            "$ref" : "#/definitions/And"
+          }, {
+            "$ref" : "#/definitions/InputStateCondition"
+          }, {
+            "$ref" : "#/definitions/Not"
+          }, {
+            "$ref" : "#/definitions/NumericValueCondition"
+          }, {
+            "$ref" : "#/definitions/Or"
+          }, {
+            "$ref" : "#/definitions/AllFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactStateCondition"
+          } ]
+        },
+        "falseIf" : {
+          "oneOf" : [ {
+            "$ref" : "#/definitions/And"
+          }, {
+            "$ref" : "#/definitions/InputStateCondition"
+          }, {
+            "$ref" : "#/definitions/Not"
+          }, {
+            "$ref" : "#/definitions/NumericValueCondition"
+          }, {
+            "$ref" : "#/definitions/Or"
+          }, {
+            "$ref" : "#/definitions/AllFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactStateCondition"
+          } ]
+        },
+        "goal" : {
+          "type" : "boolean"
+        }
+      },
+      "title" : ".Fact",
+      "required" : [ "default" ]
+    },
+    "Counter" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "numberType" : {
+          "type" : "string",
+          "enum" : [ "Integer", "Float" ]
+        },
+        "initialValue" : {
+          "type" : "number"
+        },
+        "title" : {
+          "type" : "string"
+        },
+        "details" : {
+          "type" : "string"
+        }
+      },
+      "title" : ".Counter",
+      "required" : [ "numberType", "initialValue" ]
+    },
+    "SimplifiedFact" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "title" : {
+          "type" : "string"
+        },
+        "details" : {
+          "type" : "string"
+        },
+        "condition" : {
+          "oneOf" : [ {
+            "$ref" : "#/definitions/And"
+          }, {
+            "$ref" : "#/definitions/InputStateCondition"
+          }, {
+            "$ref" : "#/definitions/Not"
+          }, {
+            "$ref" : "#/definitions/NumericValueCondition"
+          }, {
+            "$ref" : "#/definitions/Or"
+          }, {
+            "$ref" : "#/definitions/AllFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactCondition"
+          }, {
+            "$ref" : "#/definitions/AnyFactStateCondition"
+          } ]
+        },
+        "goal" : {
+          "type" : "boolean"
+        }
+      },
+      "title" : ".SimplifiedFact",
+      "required" : [ "condition" ]
+    },
+    "Test" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "disabled" : {
+          "type" : "boolean"
+        },
+        "when" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "propertyNames" : {
+            "pattern" : "([a-zA-Z0-9][a-zA-Z0-9_\\-]*/)*[a-zA-Z0-9][a-zA-Z0-9_\\-]*"
+          }
+        },
+        "then" : {
+          "type" : "object",
+          "additionalProperties" : {
+            "type" : "boolean"
+          },
+          "propertyNames" : {
+            "pattern" : "^(([a-zA-Z0-9][a-zA-Z0-9_\\-]*/)*[a-zA-Z0-9][a-zA-Z0-9_\\-]*\\.(isActive|isLocked|isValid)|\\$\\.validationIssues|[a-zA-Z0-9][a-zA-Z0-9_\\-]*)$"
+          }
+        }
+      }
+    }
+  }
+}

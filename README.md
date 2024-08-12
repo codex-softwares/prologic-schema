@@ -1,2 +1,2 @@
 # prologic-schema
-The JSON schema and companion Java classes to describe questionnaire templates for Prologic SOP application
+This contains the json schema for each versions of Prologic SOP application.
